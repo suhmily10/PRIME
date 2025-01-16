@@ -71,6 +71,7 @@ class RLHFDataset(Dataset):
                  cache_dir='~/.cache/verl/rlhf',
                  chat_template_func=None,
                  return_raw_chat=False,
+                 system_prompt=None,
                  truncation='error'):
         if not isinstance(parquet_files, (List, ListConfig)):
             parquet_files = [parquet_files]
@@ -86,6 +87,7 @@ class RLHFDataset(Dataset):
         self.return_raw_chat = return_raw_chat
         self.chat_template_func = chat_template_func
         self.truncation = truncation
+        self.system_prompt = system_prompt
 
         self._download()
         self._read_files_and_tokenize()
@@ -108,6 +110,8 @@ class RLHFDataset(Dataset):
         # filter out too long prompts
         tokenizer = self.tokenizer
         prompt_key = self.prompt_key
+        if self.system_prompt is not None:
+            self.dataframe[prompt_key] = self.dataframe[prompt_key].apply(lambda doc: doc[0].update({'content': self.system_prompt}) or doc)
         self.dataframe = self.dataframe[self.dataframe.apply(lambda doc: len(
             tokenizer.apply_chat_template(doc[prompt_key], add_generation_prompt=True)) <= self.max_prompt_length,
                                                              axis=1)]

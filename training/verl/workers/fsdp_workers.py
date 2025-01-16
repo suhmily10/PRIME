@@ -370,6 +370,7 @@ class ActorRolloutRefWorker(Worker):
             log_gpu_memory_usage('After rollout generation', logger=logger)
 
             output = self.sharding_manager.postprocess_data(output)
+            torch.cuda.synchronize()
 
         if self._is_actor and recompute_log_prob:
             # we should always recompute old_log_probs when it is HybridEngine
@@ -1053,3 +1054,30 @@ class PRIMERewardModelWorker(Worker):
         output = output.to('cpu')
         torch.cuda.empty_cache()
         return output
+
+    @register(dispatch_mode=Dispatch.ONE_TO_ALL)
+    def save_checkpoint(self, local_path, hdfs_path=None):
+        import torch
+        if self._is_offload_param:
+            load_fsdp_param_and_grad(module=self.reward_module,
+                                     device_id=torch.cuda.current_device(),
+                                     load_grad=self._is_offload_grad)
+
+        # TODO: support DCP and save sharded checkpoints
+        import torch.distributed
+        from torch.distributed.fsdp import FullyShardedDataParallel as FSDP, StateDictType, FullStateDictConfig
+        cfg = FullStateDictConfig(offload_to_cpu=True, rank0_only=True)
+        with FSDP.state_dict_type(self.reward_module, StateDictType.FULL_STATE_DICT, cfg):
+            state_dict = self.reward_module.state_dict()
+        if self.rank == 0:
+            print(f'Saving reward checkpoint to {local_path}')
+            os.makedirs(local_path, exist_ok=True)
+            self.reward_module._fsdp_wrapped_module.save_pretrained(local_path, state_dict=state_dict)
+            if hdfs_path is not None:
+                print(f'Uploading reward checkpoint to {hdfs_path}')
+                hdfs_io.makedirs(hdfs_path, exist_ok=True)
+                hdfs_io.copy(src=local_path, dst=hdfs_path)
+
+        torch.distributed.barrier()
+        if self._is_offload_param:
+            offload_fsdp_param_and_grad(module=self.reward_module, offload_grad=self._is_offload_grad)

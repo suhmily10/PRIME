@@ -21,7 +21,7 @@ from typing import List, Union
 class Tracking(object):
     supported_backend = ['wandb', 'console']
 
-    def __init__(self, project_name, experiment_name, default_backend: Union[str, List[str]] = 'console', config=None):
+    def __init__(self, project_name, experiment_name, default_backend: Union[str, List[str]] = 'console', config=None, local_dir=None, wandb_mode='online'):
         if isinstance(default_backend, str):
             default_backend = [default_backend]
         for backend in default_backend:
@@ -35,12 +35,13 @@ class Tracking(object):
 
         if 'tracking' in default_backend or 'wandb' in default_backend:
             import wandb
-            wandb.init(project=project_name, name=experiment_name, config=config)
+            # wandb.mode = 'offline'
+            wandb.init(project=project_name, name=experiment_name, mode=wandb_mode, config=config)
             self.logger['wandb'] = wandb
 
         if 'console' in default_backend:
             from verl.utils.logger.aggregate_logger import LocalLogger
-            self.console_logger = LocalLogger(print_to_console=True)
+            self.console_logger = LocalLogger(print_to_console=True, log_dir=local_dir)
             self.logger['console'] = self.console_logger
 
     def log(self, data, step, backend=None):

@@ -48,6 +48,7 @@ class RewardManager():
             self.verifier_func=compute_score
         else:
             raise NotImplementedError
+
     def verify(self, data):
         response_ids = data.batch['responses']
         response_str = self.tokenizer.batch_decode(response_ids, skip_special_tokens=True)
@@ -61,6 +62,12 @@ class RewardManager():
                       data.non_tensor_batch['ability'][i] == ability]
             reward_metrics[f'{ability}'] = statistics.mean(score_)
         reward_metrics['all'] = data.batch['acc'].mean().item()
+
+        for i,response_str_ in enumerate(response_str):
+            if i>=self.num_examine:
+                break
+            print(self.tokenizer.batch_decode(data.batch['input_ids'], skip_special_tokens=True))
+
         return score, reward_metrics
 
     def __call__(self, data: DataProto):
@@ -84,7 +91,9 @@ class RewardManager():
             reward_metrics.update(verifier_metrics)
         for i in range(verifier_reward.shape[0]):
             verifier_reward[i,valid_response_length[i]-1] += verifier_score[i]
+
         reward_tensor_dict['gt_scores'] = verifier_reward
+        # reward_metrics.update(verifier_metrics)
 
         # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
         if 'rm_scores' in data.batch.keys():
@@ -100,10 +109,6 @@ class RewardManager():
         reward_tensor_dict['all'] = reward_tensor
         reward_metrics['reward_all'] = reward_tensor.sum(dim=-1).mean(dim=0).item()
 
-        for i,response_str_ in enumerate(response_str):
-            if i>=self.num_examine:
-                break
-            print(response_str_)
         return reward_tensor_dict, reward_metrics
 
 

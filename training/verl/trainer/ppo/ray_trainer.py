@@ -432,6 +432,8 @@ class RayPRIMETrainer(object):
         logger = Tracking(project_name=self.config.trainer.project_name,
                           experiment_name=self.config.trainer.experiment_name,
                           default_backend=self.config.trainer.logger,
+                          local_dir=self.config.trainer.default_local_dir,
+                          wandb_mode=self.config.trainer.wandb_mode,
                           config=OmegaConf.to_container(self.config, resolve=True))
 
         global_steps = 0
@@ -607,6 +609,12 @@ class RayPRIMETrainer(object):
                         critic_remote_path = None #if self.config.trainer.default_hdfs_dir is None else os.path.join(
                             # self.config.trainer.default_hdfs_dir, 'critic')
                         self.critic_wg.save_checkpoint(critic_local_path, critic_remote_path)
+                    if self.use_rm:
+                        prm_local_path = os.path.join(self.config.trainer.default_local_dir, 'prm',
+                                                         f'global_step_{global_steps}')
+                        prm_remote_path = None #if self.config.trainer.default_hdfs_dir is None else os.path.join(
+                            # self.config.trainer.default_hdfs_dir, 'critic')
+                        self.rm_wg.save_checkpoint(prm_local_path, prm_remote_path)
 
                 global_steps += 1
 
@@ -633,51 +641,49 @@ class RayPRIMETrainer(object):
             reward_matrix = reward_tensor.sum(-1).reshape(-1, n_samples)
             acc_tensor = torch.mean(reward_matrix, dim=-1)
             counts = Counter(acc_tensor.tolist())
-            print("Accuracy distribution:", " ".join(f"{k}:{v}" for k, v in sorted(counts.items())))
-            
+            print("Accuracy distribution:", " ".join(f"{k:.2f}:{v}" for k, v in sorted(counts.items())))
+
             acc_mask = (acc_tensor >= self.config.data.accuracy_lower_bound) & (
                         acc_tensor <= self.config.data.accuracy_upper_bound)
         else:
             # If accuracy filtering disabled, keep all samples
             acc_mask = torch.ones(len(batch) // n_samples, dtype=torch.bool, device=reward_tensor.device)
-        
         # Then do truncation filtering if enabled
         if self.config.data.filter_truncated:
             responses = batch.batch['responses']
             attention_mask = batch.batch['attention_mask']
             response_mask = attention_mask[:, -responses.size(1):]
-            
+
             # Calculate response lengths
             response_lengths = response_mask.sum(-1)  # (batch_size,)
             response_lengths = response_lengths.reshape(-1, n_samples)  # (num_prompts, n_samples)
-            
+
             # Get max possible length from config
             max_len = self.config.data.max_response_length
-            
+
             # Check if any response in the group hits max length (indicating possible truncation)
             has_truncated = (response_lengths >= max_len).any(dim=-1)
-            
+
             # Print distribution of truncated vs non-truncated
             truncated_counts = Counter(has_truncated.tolist())
             print("Truncation distribution:", 
                 f"Truncated: {truncated_counts[True] if True in truncated_counts else 0}, "
                 f"Non-truncated: {truncated_counts[False] if False in truncated_counts else 0}")
-            
             # Keep only prompts where no response was truncated
             trunc_mask = ~has_truncated
         else:
             # If truncation filtering disabled, keep all samples
             trunc_mask = torch.ones(len(batch) // n_samples, dtype=torch.bool, device=reward_tensor.device)
-        
+
         # Combine both masks
         combined_mask = acc_mask & trunc_mask
-        
+
         # Expand mask to cover all samples for each prompt
         final_mask = combined_mask.repeat_interleave(n_samples)
-        
+
         # Apply the mask to the batch
         filtered_batch = batch.slice(final_mask)
-        
+
         print(f"Filtered batch size: {len(filtered_batch)} (from original size: {len(batch)})")
         return filtered_batch
 

@@ -1039,7 +1039,7 @@ class PRIMERewardModelWorker(Worker):
         
         token_level_scores, metrics = self.prm.update_policy(rm_data)
 
-        output=DataProto.from_dict(tensors = {'prm_scores': token_level_scores}, meta_info = {'metrics': metrics})
+        output=DataProto.from_dict(tensors = {'rm_scores': token_level_scores}, meta_info = {'metrics': metrics})
 
         if self.update_dpo_type != 'none':
             if self._is_offload_optimizer:

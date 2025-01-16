@@ -13,7 +13,6 @@ data:
   n_samples: 1
   filter_truncated: False
   filter_accuracy: False
-  filter_truncated: False
   accuracy_lower_bound: 0.0
   accuracy_upper_bound: 1.0
   oversample_factor: 1.0 # Sample more responses than the batch size

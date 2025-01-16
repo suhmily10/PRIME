@@ -89,7 +89,6 @@ class RewardManager():
         else:
             verifier_score, verifier_metrics = self.verify(data)
             reward_metrics.update(verifier_metrics)
-
         for i in range(verifier_reward.shape[0]):
             verifier_reward[i,valid_response_length[i]-1] += verifier_score[i]
 

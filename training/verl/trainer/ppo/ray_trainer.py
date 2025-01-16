@@ -648,7 +648,6 @@ class RayPRIMETrainer(object):
         else:
             # If accuracy filtering disabled, keep all samples
             acc_mask = torch.ones(len(batch) // n_samples, dtype=torch.bool, device=reward_tensor.device)
-
         # Then do truncation filtering if enabled
         if self.config.data.filter_truncated:
             responses = batch.batch['responses']
@@ -670,7 +669,6 @@ class RayPRIMETrainer(object):
             print("Truncation distribution:", 
                 f"Truncated: {truncated_counts[True] if True in truncated_counts else 0}, "
                 f"Non-truncated: {truncated_counts[False] if False in truncated_counts else 0}")
-
             # Keep only prompts where no response was truncated
             trunc_mask = ~has_truncated
         else:

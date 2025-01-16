@@ -3,6 +3,7 @@ data:
   train_files: ~/data/rlhf/gsm8k/train.parquet
   val_files: ~/data/rlhf/gsm8k/test.parquet
   prompt_key: prompt
+  system_prompt: null
   max_prompt_length: 512
   max_response_length: 512
   train_batch_size: 1024
@@ -11,6 +12,7 @@ data:
   return_raw_chat: False
   n_samples: 1
   filter_accuracy: False
+  filter_truncated: False
   accuracy_lower_bound: 0.0
   accuracy_upper_bound: 1.0
   oversample_factor: 1.0 # Sample more responses than the batch size
@@ -175,6 +177,7 @@ trainer:
   project_name: verl_examples
   experiment_name: gsm8k
   logger: ['console', 'wandb']
+  wandb_mode: online
   nnodes: 1
   n_gpus_per_node: 8
   save_freq: -1

@@ -76,11 +76,15 @@ class RewardManager():
         prompt_length = prompt_ids.shape[-1]
         valid_response_length = data.batch['attention_mask'][:, prompt_length:].sum(-1)
         response_str = self.tokenizer.batch_decode(response_ids, skip_special_tokens=True)
-        verifier_score, verifier_metrics = self.verify(data)
+        # if the batch already contains evaluation results, the verification is skipped here.
+        if 'acc' in data.batch:
+            verifier_score = data.batch['acc'].cpu().numpy().tolist()
+        else:
+            verifier_score, verifier_metrics = self.verify(data)
+            reward_metrics.update(verifier_metrics)
         for i in range(verifier_reward.shape[0]):
             verifier_reward[i,valid_response_length[i]-1] += verifier_score[i]
         reward_tensor_dict['gt_scores'] = verifier_reward
-        reward_metrics.update(verifier_metrics)
 
         # If there is rm score, we directly return rm score. Otherwise, we compute via rm_score_fn
         if 'rm_scores' in data.batch.keys():

@@ -261,6 +261,7 @@ class RayPRIMETrainer(object):
                                          max_prompt_length=self.config.data.max_prompt_length,
                                          filter_prompts=True,
                                          return_raw_chat=self.config.data.get('return_raw_chat', False),
+                                         system_prompt=self.config.data.get('system_prompt', None),
                                          truncation='error')
         self.train_dataloader = BufferedDataLoader(DataLoader(dataset=self.train_dataset,
                                            batch_size=int(self.config.data.train_batch_size*self.config.data.oversample_factor),
@@ -274,6 +275,7 @@ class RayPRIMETrainer(object):
                                        max_prompt_length=self.config.data.max_prompt_length,
                                        filter_prompts=True,
                                        return_raw_chat=self.config.data.get('return_raw_chat', False),
+                                       system_prompt=self.config.data.get('system_prompt', None),
                                        truncation='error')
         self.val_dataloader = DataLoader(dataset=self.val_dataset,
                                          batch_size=self.config.data.val_batch_size,
@@ -586,6 +588,7 @@ class RayPRIMETrainer(object):
                         val_metrics = {f'val/{key}': val for key, val in val_metrics.items()}
                     metrics['timing/testing'] = timer.last
                     metrics.update(val_metrics)
+                    logger.log(data=val_metrics, step=global_steps)
 
                 # collect metrics
                 with Timer(name='logging1', text="{name}: {seconds:.1f} seconds") as timer:

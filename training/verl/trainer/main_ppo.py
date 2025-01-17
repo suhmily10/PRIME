@@ -66,7 +66,8 @@ class RewardManager():
         for i,response_str_ in enumerate(response_str):
             if i>=self.num_examine:
                 break
-            print(self.tokenizer.batch_decode(data.batch['input_ids'], skip_special_tokens=True))
+            example = data.batch[i]['input_ids']
+            print(self.tokenizer.decode(example, skip_special_tokens=True))
 
         return score, reward_metrics
 

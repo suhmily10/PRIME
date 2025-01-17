@@ -122,7 +122,7 @@ reward_model:
     fsdp_config:
       min_num_params: 0
       param_offload: False
-  mini_batch_size: ${actor_rollout_ref.actor.ppo_mini_batch_size}
+  mini_batch_size: 256
   micro_batch_size: 64
   max_length: null
   rm_coef: 0 # weight for the reward model
@@ -137,7 +137,7 @@ reward_model:
     ref_path: openbmb/Eurus-7b-sft
     external_lib: ${actor_rollout_ref.model.external_lib}
     enable_gradient_checkpointing: ${actor_rollout_ref.model.enable_gradient_checkpointing}
-    use_remove_padding: False
+    use_remove_padding: ${actor_rollout_ref.model.use_remove_padding}
     fsdp_config:
       wrap_policy:
         min_num_params: 0
@@ -186,3 +186,4 @@ trainer:
   default_hdfs_dir: ~/experiments/gsm8k/ppo/${trainer.experiment_name}
   default_local_dir: checkpoints/${trainer.project_name}/${trainer.experiment_name}
   runtime_env: none
+  val_before_train: False

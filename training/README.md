@@ -34,14 +34,18 @@ During the rollout stage, we find that choosing appropriate prompts matters a lo
 data:
   n_samples: 4 
   filter_accuracy: True
+  filter_truncated: True
   accuracy_lower_bound: 0.2
   accuracy_upper_bound: 0.8
   oversample_factor: 1
+  system_prompt: null
 ```
 - ``data.n_samples``: Amount of trajectories for each prompt.
 - ``data.filter_accuracy``: Whether to enable prompt filtering. 
+- ``data.filter_truncated``: Whether to filter out truncated reponses that reach max length.
 - ``data.accuracy_lower_bound`` ``data.accuracy_upper_bound``: The range of accuracy to preserve the prompt.
 - ``data.oversample_factor``: Oversample factor for the filtered prompts. Will sample ``batch_size * oversample_factor`` prompts for each batch.
+- ``data.system_prompt``: System prompt to use. If set to ``null``, will use the default system prompt in dataset.
 
 
 ### Implicit Process Reward
@@ -56,6 +60,8 @@ reward_model:
   rm_type: prime
   prime_granularity: token
   prime_norm: batch_norm
+  mini_batch_size: 256
+  micro_batch_size: 64
   prime_model:
     path: PRIME-RL/Eurus-2-7B-SFT
     ref_type: freeze
@@ -63,17 +69,21 @@ reward_model:
     update: after
     beta_train: 0.05
     loss_type: ce
+    use_remove_padding: False
 ```
 - ``reward_model.rm_coef``: Weight for reward model in the reward combination. 
 - ``reward_model.rm_type``: Type of reward model, ``prime`` for implicit PRM and ``value`` for normal reward models. 
 - ``reward_model.prime_granularity``: Granularity to assign reward value. If set to ``token``, every token will have a process reward. If set to ``whole``, the reward will only appear on the last token just like vanilla RLHF. 
 - ``reward_model.prime_norm``: How to normalize process reward value to stabilize training. Default to ``batch_norm``
+- ``reward_model.mini_batch_size``: Mini batch size for PRM update. **Should be divisible by world_size.**
+- ``reward_model.micro_batch_size``: Micro batch size for PRM update. **Should be divisible by world_size.**
 - ``reward_model.path``: Model as initialization of implicit PRM. 
 - ``reward_model.ref_type``: PRM Reference model type. ``freeze``: the reference model has frozen parameters. ``policy``: the reference model synchronizes with the policy model. 
 - ``reward_model.ref_path``: Reference model in implicit PRM. 
 - ``reward_model.prime_model.update``: ``none`` to disable online PRM update, ``after`` to update the PRM after the policy model (Single-Forward), ``before`` to update the PRM before the policy model (Double-Forward). 
 - ``reward_model.prime_model.beta_train``: Beta value used to update the PRM. 
 - ``reward_model.prime_model.loss_type``: Loss function to update the PRM. Only ``ce`` is supported now.
+- ``reward_model.prime_model.use_remove_padding``: Whether to remove padding tokens in the PRM loss calculation. Turn on to accelerate and save memory. Support Llama, Qwen, Mistral, and InternLM for now.
 
 ### Advantage Estimation
 From pilot study, we compared different online RL algorithms and found that REINFORCE-like algorithms, despite simpler than PPO, are strong enough to produce stable results. We choose the best performing [RLOO](https://arxiv.org/abs/2402.14740) as our RL algorithm. 

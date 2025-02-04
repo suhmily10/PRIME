@@ -2,7 +2,7 @@
 
 # Process Reinforcement Through Implicit Rewards
 
-[![Github](https://img.shields.io/badge/PRIME-000000?style=for-the-badge&logo=github&logoColor=000&logoColor=white)](https://github.com/PRIME-RL/PRIME)  [![Notion](https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white)](https://curvy-check-498.notion.site/Process-Reinforcement-through-Implicit-Rewards-15f4fcb9c42180f1b498cc9b2eaf896f)  [![Hugging Face Collection](https://img.shields.io/badge/PRIME_Collection-fcd022?style=for-the-badge&logo=huggingface&logoColor=000)](https://huggingface.co/PRIME-RL)
+[![arXiv](https://img.shields.io/badge/arXiv-2502.01456-ff0000.svg?style=for-the-badge)](https://arxiv.org/abs/2502.01456)  [![Github](https://img.shields.io/badge/PRIME-000000?style=for-the-badge&logo=github&logoColor=000&logoColor=white)](https://github.com/PRIME-RL/PRIME)  [![Notion](https://img.shields.io/badge/Notion-%23000000.svg?style=for-the-badge&logo=notion&logoColor=white)](https://curvy-check-498.notion.site/Process-Reinforcement-through-Implicit-Rewards-15f4fcb9c42180f1b498cc9b2eaf896f)  [![Hugging Face Collection](https://img.shields.io/badge/PRIME_Collection-fcd022?style=for-the-badge&logo=huggingface&logoColor=000)](https://huggingface.co/PRIME-RL)
 
 <div align="center" style="font-family: Arial, sans-serif;">
   <p>
@@ -25,11 +25,13 @@
 
 # 🎉News
 
+- **[2025/02/04]** Released our Paper on arXiv. See [here](https://arxiv.org/abs/2502.01456).
 - **[2025/01/06]** We release the training/eval/data_preprocessing code. Enjoy! We are working on the paper and will release it very soon.
 - **[2025/01/02]** We present **PRIME** (Process Reinforcement through IMplicit REwards), an open-source solution for online RL with process rewards, to advance reasoning abilities of language models beyond imitation or distillation. All models and data released through [HuggingFace](https://huggingface.co/PRIME-RL).
 
 # 🔗Links
 
+- 📜 [Paper](https://arxiv.org/abs/2502.01456)
 - 📜 [Blog](https://curvy-check-498.notion.site/Process-Reinforcement-through-Implicit-Rewards-15f4fcb9c42180f1b498cc9b2eaf896f)
 - 🤗 [PRIME Collection](https://huggingface.co/PRIME-RL)
 

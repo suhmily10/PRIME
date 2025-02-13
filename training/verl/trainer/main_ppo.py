@@ -205,13 +205,16 @@ def main_task(config):
             raise NotImplementedError
         mapping[Role.RewardModel] = global_pool_id
 
+    print('role_worker_mapping:', role_worker_mapping)
     reward_fn = RewardManager(tokenizer=tokenizer, num_examine=0, config=config) # note: verifier is called both inside reward_fn and outside.
+    print('reward_fn initialized')
 
     # Note that we always use function-based RM for validation
     val_reward_fn = RewardManager(tokenizer=tokenizer, num_examine=1,config=config)
-
+    print('val_reward_fn initialized')
+    
     resource_pool_manager = ResourcePoolManager(resource_pool_spec=resource_pool_spec, mapping=mapping)
-
+    print('resource_pool_manager initialized')
     trainer = RayPRIMETrainer(config=config,
                             tokenizer=tokenizer,
                             role_worker_mapping=role_worker_mapping,
@@ -219,7 +222,9 @@ def main_task(config):
                             ray_worker_group_cls=ray_worker_group_cls,
                             reward_fn=reward_fn,
                             val_reward_fn=val_reward_fn)
+    print('finish instantiating trainer')
     trainer.init_workers()
+    print('trainer initialized')
     trainer.fit()
 
 

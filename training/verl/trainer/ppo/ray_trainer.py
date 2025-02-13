@@ -263,6 +263,7 @@ class RayPRIMETrainer(object):
                                          return_raw_chat=self.config.data.get('return_raw_chat', False),
                                          system_prompt=self.config.data.get('system_prompt', None),
                                          truncation='error')
+        print('finished loading train dataset')
         self.train_dataloader = BufferedDataLoader(DataLoader(dataset=self.train_dataset,
                                            batch_size=int(self.config.data.train_batch_size*self.config.data.oversample_factor),
                                            shuffle=True,
@@ -277,6 +278,7 @@ class RayPRIMETrainer(object):
                                        return_raw_chat=self.config.data.get('return_raw_chat', False),
                                        system_prompt=self.config.data.get('system_prompt', None),
                                        truncation='error')
+        print('finished loading val dataset')
         self.val_dataloader = DataLoader(dataset=self.val_dataset,
                                          batch_size=self.config.data.val_batch_size,
                                          shuffle=True,
@@ -360,6 +362,7 @@ class RayPRIMETrainer(object):
 
         # create actor and rollout
         if self.hybrid_engine:
+            print('Using hybrid engine')
             resource_pool = self.resource_pool_manager.get_resource_pool(Role.ActorRollout)
             actor_rollout_cls = RayClassWithInitArgs(cls=self.role_worker_mapping[Role.ActorRollout],
                                                      config=self.config.actor_rollout_ref,
@@ -370,6 +373,7 @@ class RayPRIMETrainer(object):
 
         # create critic
         if self.config.algorithm.adv_estimator == 'gae':
+            print('Using GAE')
             resource_pool = self.resource_pool_manager.get_resource_pool(Role.Critic)
             critic_cls = RayClassWithInitArgs(cls=self.role_worker_mapping[Role.Critic], config=self.config.critic)
             self.resource_pool_to_cls[resource_pool]['critic'] = critic_cls
@@ -381,6 +385,7 @@ class RayPRIMETrainer(object):
 
         # create reference policy if needed
         if self.use_reference_policy:
+            print('Using reference policy')
             resource_pool = self.resource_pool_manager.get_resource_pool(Role.RefPolicy)
             ref_policy_cls = RayClassWithInitArgs(self.role_worker_mapping[Role.RefPolicy],
                                                   config=self.config.actor_rollout_ref,
@@ -389,6 +394,7 @@ class RayPRIMETrainer(object):
 
         # create a reward model if reward_fn is None
         if self.use_rm:
+            print('Using reward model')
             # we create a RM here
             resource_pool = self.resource_pool_manager.get_resource_pool(Role.RewardModel)
             rm_cls = RayClassWithInitArgs(self.role_worker_mapping[Role.RewardModel], config=self.config.reward_model)
@@ -409,14 +415,17 @@ class RayPRIMETrainer(object):
             self.wg_dicts.append(wg_dict)
 
         if self.use_critic:
+            print('Using critic')
             self.critic_wg = all_wg['critic']
             self.critic_wg.init_model()
 
         if self.use_reference_policy:
+            print('Using reference policy')
             self.ref_policy_wg = all_wg['ref']
             self.ref_policy_wg.init_model()
 
         if self.use_rm:
+            print('Using reward model')
             self.rm_wg = all_wg['rm']
             self.rm_wg.init_model()
 
